@@ -61,10 +61,11 @@ Run sbe-scan on a list of targets
         $ sbe-scan -list list.txt
 Run sbe-scan on a single targets with env-url
         $ sbe-scan -url https://example.com -eu /actuator/env
-Run sbe-scan on a single targets with jolokia-list-url
-        $ sbe-scan -url https://example.com -jlu /actuator/jolokia/list
+Run sbe-scan on a single targets with env-name
+        $ sbe-scan -url https://example.com -en spring.datasource.password
 Run sbe-scan on a single targets a proxy server
         $ export https_proxy='http://127.0.0.1:7890' sbe-scan -url https://example.com 
+        
 ```
 
 use pathScan to collect targets and pass them to sbe-scan via standard input

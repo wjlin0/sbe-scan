@@ -264,9 +264,13 @@ func (d *GHReleaseDownloader) getToolAssetID(latest *github.RepositoryRelease) e
 	builder := &strings.Builder{}
 	builder.WriteString(d.assetName)
 	builder.WriteString("_")
-	builder.WriteString(latest.GetTagName())
+	builder.WriteString(strings.TrimPrefix(d.Latest.GetTagName(), "v"))
 	builder.WriteString("_")
-	builder.WriteString(runtime.GOOS)
+	if strings.EqualFold(runtime.GOOS, "darwin") {
+		builder.WriteString("macOS")
+	} else {
+		builder.WriteString(runtime.GOOS)
+	}
 	builder.WriteString("_")
 	builder.WriteString(runtime.GOARCH)
 

@@ -10,7 +10,7 @@ const banner = `
 /____/  /_.___/ \___/        /____/  \___/  \__,_/  /_/ /_/
 `
 const (
-	version  = `0.0.1`
+	version  = `0.0.2`
 	repoName = `sbe-scan`
 )
 
