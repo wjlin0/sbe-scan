@@ -58,7 +58,7 @@ Run sbe-scan on a single targets a proxy server
 				gologger.Error().Msgf("%s version check failed: %v", repoName, err.Error())
 			}
 		} else {
-			gologger.Info().Msgf("Current %s version %v %v", repoName, version, updateutils.GetVersionDescription(version, latestVersion))
+			gologger.Info().Msgf("Current %s version v%v %v", repoName, version, updateutils.GetVersionDescription(version, latestVersion))
 		}
 	}
 	options.CheckVersion(callback)

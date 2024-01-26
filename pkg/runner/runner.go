@@ -88,6 +88,7 @@ func (r *Runner) RunEnumeration() error {
 
 				// 判断是否被屏蔽敏感数据
 				if envJson.ProfilesActive() {
+					gologger.Info().Msg("find url " + domain + "  write to " + md5String(domain) + ".application.json")
 					// yaml序列化 到 application.properties 文件
 					return envJson.WriteProperties(md5String(domain) + ".application.json")
 				}
@@ -104,9 +105,10 @@ func (r *Runner) RunEnumeration() error {
 					switch m {
 					case "one":
 						// 运行方法一
-						gologger.Info().Msgf("Running method one: %s", one.Describe())
+						gologger.Debug().Msgf("Running method one: %s", one.Describe())
 						agent := &one.Agent{}
 						if err := agent.Run(fmt.Sprintf(domain), sessions, options, envJson); err == nil {
+							gologger.Info().Msg("find url " + domain + "  write to " + md5String(domain) + ".application.json")
 							return agent.EnvJson.WriteProperties(md5String(domain) + ".application.json")
 						} else {
 							gologger.Debug().Msg(err.Error())
@@ -116,13 +118,16 @@ func (r *Runner) RunEnumeration() error {
 					}
 				}
 				if envJson.PropertySources != nil {
+					gologger.Info().Msg("find url " + domain + "  write to " + md5String(domain) + ".application.json")
 					return envJson.WriteProperties(md5String(domain) + ".application.json")
 				}
+
 				return nil
 			}(domain)
 			if err != nil {
-				gologger.Error().Msg(err.Error())
+				gologger.Debug().Msg(err.Error())
 			}
+
 		}(domain)
 	}
 	wg.Wait()

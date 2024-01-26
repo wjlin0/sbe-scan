@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/cheggaaa/pb/v3 v3.1.4
+	github.com/corpix/uarand v0.2.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.15.0
 	github.com/google/go-github/v30 v30.1.0
@@ -16,7 +17,8 @@ require (
 	github.com/projectdiscovery/interactsh v1.1.8
 	github.com/projectdiscovery/ratelimit v0.0.25
 	github.com/projectdiscovery/retryablehttp-go v1.0.44
-	github.com/projectdiscovery/utils v0.0.74-0.20240115220656-48fef326de18
+	github.com/projectdiscovery/utils v0.0.75
+	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/oauth2 v0.11.0
 )
@@ -82,7 +84,6 @@ require (
 	github.com/projectdiscovery/retryabledns v1.0.51 // indirect
 	github.com/quic-go/quic-go v0.37.7 // indirect
 	github.com/refraction-networking/utls v1.5.4 // indirect
-	github.com/remeh/sizedwaitgroup v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect

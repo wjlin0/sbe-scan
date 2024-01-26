@@ -5,15 +5,15 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"github.com/pkg/errors"
-
 	"fmt"
+	"github.com/corpix/uarand"
+	"github.com/pkg/errors"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/ratelimit"
 	"github.com/projectdiscovery/retryablehttp-go"
 	errorutil "github.com/projectdiscovery/utils/errors"
-	stringsutil "github.com/projectdiscovery/utils/strings"
 	"github.com/wjlin0/sbe-scan/pkg/types"
+	"github.com/wjlin0/sbe-scan/pkg/utils"
 	"io"
 	"math/rand"
 	"net/http"
@@ -125,14 +125,18 @@ func (s *Session) GetEnvJson(domain string, urls ...string) (map[string]*Configu
 					return errors.New(sprintf)
 				}
 
-				// 判断是不是 200 且 header 中有 Content-Type: application \ json
-				if !stringsutil.ContainsAny(resp.Header.Get("Content-Type"), "application", "json") {
-					return fmt.Errorf("request env %s failed ,  content-type is not application/json", envURL)
-				}
+				//// 判断是不是 200 且 header 中有 Content-Type: application \ json
+				//if !stringsutil.ContainsAny(resp.Header.Get("Content-Type"), "application", "json") {
+				//	return fmt.Errorf("request env %s failed ,  content-type is not application/json", envURL)
+				//}
 
 				body, err := ReadBody(resp)
 				if err != nil {
 					return errorutil.NewWithErr(err).Msgf("read env body failed")
+				}
+				// 判断内容是否能被json序列化
+				if !utils.IsJsonData(body.Bytes()) {
+					return errors.New(envURL + " is not json data")
 				}
 				// json 反序列化
 				envJson := &Configuration{}
@@ -153,7 +157,7 @@ func (s *Session) GetEnvJson(domain string, urls ...string) (map[string]*Configu
 	}
 	wg.Wait()
 	if len(envJsons) == 0 {
-		return nil, errors.New("request " + domain + fmt.Sprintf("  %d times ,but no env json found", len(urls)))
+		return nil, errors.New("request " + domain + fmt.Sprintf(" %d times, but no env json found", len(urls)))
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -188,6 +192,9 @@ func (s *Session) GetJolokiaList(domain string, urls ...string) (map[string]*Jol
 				body, err := ReadBody(resp)
 				if err != nil {
 					return errors.Wrap(err, "read jolokia body failed")
+				}
+				if !utils.IsJsonData(body.Bytes()) {
+					return errors.New(jolokiaURL + " is not json data")
 				}
 				// json 反序列化
 				jolokiaList := &JolokiaList{}
@@ -231,6 +238,9 @@ func (s *Session) NewRequest(method, url string, body interface{}) (*retryableht
 			}
 		}
 	}
-
+	// 判断 是否存在了 User-Agent
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", uarand.GetRandom())
+	}
 	return req, nil
 }

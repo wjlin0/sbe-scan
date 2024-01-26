@@ -2,6 +2,7 @@ package method
 
 import (
 	"encoding/json"
+	"github.com/wjlin0/sbe-scan/pkg/types"
 	"os"
 )
 
@@ -10,8 +11,8 @@ type PropertySources struct {
 	Props map[string]PropertyValue `json:"properties"`
 }
 type PropertyValue struct {
-	Value  string `json:"value"`
-	Origin string `json:"origin"`
+	Value  interface{} `json:"value"`
+	Origin string      `json:"origin"`
 }
 
 type Configuration struct {
@@ -23,11 +24,12 @@ func (e *Configuration) ProfilesActive() bool {
 	// 判断 properties 中的 value 有没有 ***,遇到第一个就返回false
 	for _, source := range e.PropertySources {
 		for _, props := range source.Props {
-			if props.Value == "******" {
+			if types.ToString(props.Value) == "******" {
 				return false
 			}
 		}
 	}
+
 	return true
 }
 
@@ -35,7 +37,7 @@ func (e *Configuration) GetProperties() map[string]string {
 	properties := make(map[string]string)
 	for _, source := range e.PropertySources {
 		for key, value := range source.Props {
-			properties[key] = value.Value
+			properties[key] = types.ToString(value.Value)
 		}
 	}
 	return properties

@@ -9,7 +9,7 @@ import (
 const DefaultThread = 10
 
 func (opt *Options) Validate() error {
-	if opt.URL == nil && opt.List == nil {
+	if opt.Count() == 0 {
 		return errors.New("no targets specified")
 	}
 

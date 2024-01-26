@@ -1,10 +1,13 @@
 package types
 
 import (
+	"bufio"
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
+	fileutil "github.com/projectdiscovery/utils/file"
 	stringsutil "github.com/projectdiscovery/utils/strings"
+	"os"
 	"strings"
 )
 
@@ -31,25 +34,44 @@ func (opt *Options) Count() int {
 // InitTargets 初始化 targets
 func (opt *Options) InitTargets() {
 	var targetMap = make(map[string]struct{})
-	for _, url := range opt.URL {
-		// 除去URL末尾的 /
-		url = strings.TrimSuffix(url, "/")
-		// 添加上 http://
-		if !stringsutil.HasPrefixAny(url, "http://", "https://") {
-			url = "http://" + url
+	var target string
+	// 写一个内部函数用于调整 target
+	var adjustTarget = func(target string) string {
+		target = strings.TrimSpace(target)
+		if target == "" {
+			return ""
 		}
-		targetMap[url] = struct{}{}
-	}
-	for _, list := range opt.List {
-		// 除去URL末尾的 /
-		list = strings.TrimSuffix(list, "/")
-		// 添加上 http://
-		if !stringsutil.HasPrefixAny(list, "http://", "https://") {
-			list = "http://" + list
+		target = strings.TrimSuffix(target, "/")
+		if !stringsutil.HasPrefixAny(target, "http://", "https://") {
+			target = "http://" + target
 		}
-		targetMap[list] = struct{}{}
+		return target
 	}
-	for target := range targetMap {
+
+	for _, target = range opt.URL {
+		if target = adjustTarget(target); target == "" {
+			continue
+		}
+
+		targetMap[target] = struct{}{}
+	}
+	for _, target = range opt.List {
+		if target = adjustTarget(target); target == "" {
+			continue
+		}
+		targetMap[target] = struct{}{}
+	}
+	// 从标准输入中读取
+	if fileutil.HasStdin() {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			if target = adjustTarget(scanner.Text()); target == "" {
+				continue
+			}
+			targetMap[target] = struct{}{}
+		}
+	}
+	for target = range targetMap {
 		opt.Targets = append(opt.Targets, target)
 	}
 }

@@ -17,7 +17,7 @@ go install github.com/wjlin0/sbe-scan/cmd/sbe-scan@latest
 或者
 安装完成的二进制文件在[release](https://github.com/wjlin0/sbe-scan/releases)中下载
 ```shell
-wget https://github.com/wjlin0/sbe-scan/releases/download/v0.0.1/
+wget https://github.com/wjlin0/sbe-scan/releases/download/v0.0.2/
 ```
 
 # 使用
@@ -65,4 +65,12 @@ Run sbe-scan on a single targets with jolokia-list-url
         $ sbe-scan -url https://example.com -jlu /actuator/jolokia/list
 Run sbe-scan on a single targets a proxy server
         $ export https_proxy='http://127.0.0.1:7890' sbe-scan -url https://example.com 
+```
+
+use pathScan to collect targets and pass them to sbe-scan via standard input
+
+```shell
+pathScan -ue quake -uq 'app:"springboot"' -uc -silent -ul 200 | sbe-scan
+```text
+
 ```
