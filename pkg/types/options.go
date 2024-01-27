@@ -5,25 +5,32 @@ import (
 	"github.com/projectdiscovery/goflags"
 	"github.com/projectdiscovery/gologger"
 	"github.com/projectdiscovery/gologger/levels"
-	fileutil "github.com/projectdiscovery/utils/file"
+	readerutil "github.com/projectdiscovery/utils/reader"
 	stringsutil "github.com/projectdiscovery/utils/strings"
 	"os"
 	"strings"
+	"time"
 )
 
 type Options struct {
-	URL            goflags.StringSlice
-	List           goflags.StringSlice
-	EnvURL         goflags.StringSlice
-	JolokiaURL     goflags.StringSlice
-	JolokiaListURL goflags.StringSlice
-	EnvName        goflags.StringSlice
-	Headers        goflags.StringSlice
-	Debug          bool
-	RateLimit      int
-	Thread         int
-	Methods        goflags.StringSlice
-	Targets        []string
+	URL              goflags.StringSlice
+	List             goflags.StringSlice
+	EnvURL           goflags.StringSlice
+	JolokiaURL       goflags.StringSlice
+	JolokiaListURL   goflags.StringSlice
+	EnvName          goflags.StringSlice
+	Headers          goflags.StringSlice
+	ProxyURL         goflags.StringSlice
+	Debug            bool
+	DisableStdin     bool
+	RateLimit        int
+	Thread           int
+	Methods          goflags.StringSlice
+	OutputDir        string
+	Targets          []string
+	InputReadTimeout time.Duration
+	Stdin            bool
+	Timeout          int
 }
 
 // Count 计算目标有多少个
@@ -62,8 +69,9 @@ func (opt *Options) InitTargets() {
 		targetMap[target] = struct{}{}
 	}
 	// 从标准输入中读取
-	if fileutil.HasStdin() {
-		scanner := bufio.NewScanner(os.Stdin)
+	if opt.Stdin {
+		reader := readerutil.TimeoutReader{Reader: os.Stdin, Timeout: opt.InputReadTimeout}
+		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
 			if target = adjustTarget(scanner.Text()); target == "" {
 				continue

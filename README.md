@@ -16,9 +16,16 @@ go install github.com/wjlin0/sbe-scan/cmd/sbe-scan@latest
 ```
 或者
 安装完成的二进制文件在[release](https://github.com/wjlin0/sbe-scan/releases)中下载
-```shell
-wget https://github.com/wjlin0/sbe-scan/releases/download/v0.0.2/
-```
+- [macOS-arm64](https://github.com/wjlin0/sbe-scan/releases/download/v0.0.3/sbe-scan_0.0.3_macOS_arm64.zip)
+
+- [macOS-amd64](https://github.com/wjlin0/sbe-scan/releases/download/v0.0.3/sbe-scan_0.0.3_macOS_amd64.zip)
+
+- [linux-amd64](https://github.com/wjlin0/sbe-scan/releases/download/v0.0.3/sbe-scan_0.0.3_linux_amd64.zip)
+
+- [windows-amd64](https://github.com/wjlin0/sbe-scan/releases/download/v0.0.3/sbe-scan_0.0.3_windows_amd64.zip)
+
+- [windows-386](https://github.com/wjlin0/sbe-scan/releases/download/v0.0.3/sbe-scan_0.0.3_windows_386.zip)
+
 
 # 使用
 ```shell
@@ -35,6 +42,9 @@ INPUT:
    -url, -u string[]  URL to scan
    -list string[]     File containing list of URLs to scan
 
+OUTPUT:
+   -o, -output string  Directory to save results (default "output/")
+
 CONFIG:
    -eu, -env-url string[]            URL to get env
    -ju, -jolokia-url string[]        URL to get jolokia
@@ -44,11 +54,15 @@ CONFIG:
    -header string[]                  Headers to use for enumeration
 
 LIMIT:
+   -timeout int          time to wait in seconds before timeout (default 10)
    -t, -thread int       Number of concurrent threads (default 10) (default 10)
    -rl, -rate-limit int  Rate limit for enumeration speed (n req/sec)
 
 DEBUG:
-   -debug  Enable debugging
+   -debug                           Enable debugging
+   -p, -proxy string[]              list of http/socks5 proxy to use (comma separated or file input)
+   -irt, -input-read-timeout value  timeout on input read (default 3m0s)
+   -no-stdin                        disable stdin processing
 
 UPDATE:
    -update  Update tool
@@ -61,17 +75,33 @@ Run sbe-scan on a list of targets
         $ sbe-scan -list list.txt
 Run sbe-scan on a single targets with env-url
         $ sbe-scan -url https://example.com -eu /actuator/env
-Run sbe-scan on a single targets with env-name
-        $ sbe-scan -url https://example.com -en spring.datasource.password
+Run sbe-scan on a single targets with jolokia-list-url
+        $ sbe-scan -url https://example.com -jlu /actuator/jolokia/list
 Run sbe-scan on a single targets a proxy server
-        $ export https_proxy='http://127.0.0.1:7890' sbe-scan -url https://example.com 
-        
+        $ sbe-scan -url https://example.com  -proxy http://127.0.0.1:7890
+          
 ```
 
 use pathScan to collect targets and pass them to sbe-scan via standard input
 
 ```shell
 pathScan -ue quake -uq 'app:"springboot"' -uc -silent -ul 200 | sbe-scan
+```
 ```text
+➜  ~ pathScan -ue quake -uq 'app:"springboot"' -uc -silent -ul 200 | sbe-scan
 
+            __
+   _____   / /_   ___           _____  _____  ____ _   ____
+  / ___/  / __ \ / _ \ ______  / ___/ / ___/ / __  /  / __ \
+ (__  )  / /_/ //  __//_____/ (__  ) / /__  / /_/ /  / / / /
+/____/  /_.___/ \___/        /____/  \___/  \__,_/  /_/ /_/
+
+				wjlin0.com
+
+慎用。你要为自己的行为负责
+开发者不承担任何责任，也不对任何误用或损坏负责.
+[INF] Current sbe-scan version v0.0.3 (latest)
+[INF] Loaded 109 targets from input
+[INF] Running all methods
+[INF] find url https://example.com  write to /Users/wjl/output/5051ebf7c0761402e8d072c9a50cb0f1.application.json
 ```

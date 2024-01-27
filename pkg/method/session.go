@@ -17,6 +17,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,27 +33,37 @@ type Session struct {
 }
 
 func NewSession(options *types.Options) (sessions *Session, err error) {
-	timeout := 30
+
 	retryMax := 3
+
+	// load proxy
+
+	proxyFunc := func(req *http.Request) (*url.URL, error) {
+		if types.ProxyURL != "" {
+			return url.Parse(types.ProxyURL)
+		}
+		return http.ProxyFromEnvironment(req)
+
+	}
 	Transport := &http.Transport{
 		MaxIdleConns:        -1,
 		MaxIdleConnsPerHost: -1,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
-		ResponseHeaderTimeout: time.Duration(timeout) * time.Second,
-		Proxy:                 http.ProxyFromEnvironment,
+		ResponseHeaderTimeout: time.Duration(options.Timeout) * time.Second,
+		Proxy:                 proxyFunc,
 	}
 	httpclient := &http.Client{
 		Transport: Transport,
-		Timeout:   time.Duration(timeout) * time.Second,
+		Timeout:   time.Duration(options.Timeout) * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
 
 	retryablehttpOptions := retryablehttp.Options{RetryMax: retryMax}
-	retryablehttpOptions.RetryWaitMax = time.Duration(timeout) * time.Second
+	retryablehttpOptions.RetryWaitMax = time.Duration(options.Timeout) * time.Second
 	client := retryablehttp.NewWithHTTPClient(httpclient, retryablehttpOptions)
 
 	sessions = &Session{
